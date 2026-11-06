@@ -14,9 +14,13 @@ import { registerUser } from "../services/authService";
 export default function RegistroScreen() {
   const router = useRouter();
   const { tipo } = useLocalSearchParams<{ tipo?: string }>();
+  const esPaseador = tipo?.toLowerCase().includes("pase") ?? false;
+
   const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
   const [contrasena, setContrasena] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [zona, setZona] = useState("");
   const [error, setError] = useState("");
 
   const registrarUsuario = async () => {
@@ -34,16 +38,26 @@ export default function RegistroScreen() {
       setError("La contraseña debe tener al menos 6 caracteres.");
       return;
     }
-
-    const tipoUsuario = tipo?.toLowerCase().includes("pase")
-      ? "paseador"
-      : "propietario";
+    if (esPaseador) {
+      if (!telefono.trim() || !zona.trim()) {
+        setError("Escribe tu teléfono y la zona donde paseas.");
+        return;
+      }
+      if (telefono.replace(/\D/g, "").length < 7) {
+        setError("Escribe un teléfono válido.");
+        return;
+      }
+    }
 
     const resultado = await registerUser({
       nombre: nombre.trim(),
       correo,
       contrasena,
-      tipo: tipoUsuario,
+      tipo: esPaseador ? "paseador" : "propietario",
+      ...(esPaseador 
+        ? { 
+          telefono: telefono.trim(), 
+          zona: zona.trim() } : {}),
     });
 
     if (!resultado.ok) {
@@ -60,12 +74,10 @@ export default function RegistroScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <View style={styles.contenido}>
-        <Text style={styles.icono}>🐾</Text>
+        <Text style={styles.icono}>{esPaseador ? "🦮" : "🐶"}</Text>
         <Text style={styles.titulo}>Únete a PetWalk</Text>
         <Text style={styles.subtitulo}>
-          {tipo
-            ? `Registro como ${tipo.toLowerCase()}`
-            : "Crea tu cuenta para disfrutar de paseos más seguros."}
+          {esPaseador ? "Registro como paseador" : "Registro como propietario"}
         </Text>
 
         <Text style={styles.etiqueta}>Nombre completo</Text>
@@ -95,6 +107,27 @@ export default function RegistroScreen() {
           onChangeText={setContrasena}
           secureTextEntry
         />
+
+        {esPaseador && (
+          <>
+            <Text style={styles.etiqueta}>Teléfono</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="300 123 4567"
+              value={telefono}
+              onChangeText={setTelefono}
+              keyboardType="phone-pad"
+            />
+
+            <Text style={styles.etiqueta}>Zona donde paseas</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ej: Centro, barrio..."
+              value={zona}
+              onChangeText={setZona}
+            />
+          </>
+        )}
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 

@@ -4,6 +4,27 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Colores } from "../constants/colores";
 import { getCurrentUser, logout, User } from "../services/authService";
 
+type OpcionProps = {
+  titulo: string;
+  ayuda: string;
+  onPress?: () => void; // sin onPress = opción todavía no disponible
+};
+
+function Opcion({ titulo, ayuda, onPress }: OpcionProps) {
+  const activa = !!onPress;
+  return (
+    <TouchableOpacity
+      style={[styles.boton, !activa && styles.botonInactivo]}
+      activeOpacity={0.8}
+      disabled={!activa}
+      onPress={onPress}
+    >
+      <Text style={styles.textoBoton}>{titulo}</Text>
+      <Text style={styles.textoAyuda}>{activa ? ayuda : "Próximamente"}</Text>
+    </TouchableOpacity>
+  );
+}
+
 export default function InicioScreen() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -24,33 +45,39 @@ export default function InicioScreen() {
 
   if (!user) return null;
 
-  const esPropietario = user.tipo === "propietario";
+  const esPaseador = user.tipo === "paseador";
 
   return (
     <View style={styles.contenedor}>
       <View style={styles.contenido}>
-        <Text style={styles.icono}>🐾</Text>
+        <Text style={styles.icono}>{esPaseador ? "🦮" : "🐶"}</Text>
         <Text style={styles.titulo}>¡Hola, {user.nombre}!</Text>
         <Text style={styles.subtitulo}>
-          Cuenta de {esPropietario ? "propietario" : "paseador"}
+          Cuenta de {esPaseador ? "paseador" : "propietario"}
         </Text>
 
-        {esPropietario ? (
-          <TouchableOpacity
-            style={styles.boton}
-            activeOpacity={0.8}
-            onPress={() => router.push("/mascotas")}
-          >
-            <Text style={styles.textoBoton}>🐶 Mis mascotas</Text>
-            <Text style={styles.textoAyuda}>
-              Registra y administra tus mascotas
-            </Text>
-          </TouchableOpacity>
+        {esPaseador ? (
+          <>
+            <Opcion
+              titulo="🐶 Mis mascotas"
+              ayuda="Registra las mascotas que vas a pasear"
+              onPress={() => router.push("/mascotas")}
+            />
+            <Opcion
+              titulo="🦮 Iniciar paseo"
+              ayuda="Registra el recorrido con GPS"
+              onPress={() => router.push("/iniciar-paseo")}
+            />
+            <Opcion
+              titulo="📍 Historial de paseos"
+              ayuda="Consulta tus recorridos"
+            />
+          </>
         ) : (
-          <View style={[styles.boton, styles.botonInactivo]}>
-            <Text style={styles.textoBoton}>🦮 Mis paseos</Text>
-            <Text style={styles.textoAyuda}>Próximamente</Text>
-          </View>
+          <Opcion
+            titulo="📍 Paseos de mis mascotas"
+            ayuda="Consulta los recorridos"
+          />
         )}
 
         <TouchableOpacity
