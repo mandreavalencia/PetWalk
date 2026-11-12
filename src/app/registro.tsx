@@ -54,10 +54,12 @@ export default function RegistroScreen() {
       correo,
       contrasena,
       tipo: esPaseador ? "paseador" : "propietario",
-      ...(esPaseador 
-        ? { 
-          telefono: telefono.trim(), 
-          zona: zona.trim() } : {}),
+      ...(esPaseador
+        ? {
+            telefono: telefono.trim(),
+            zona: zona.trim(),
+          }
+        : {}),
     });
 
     if (!resultado.ok) {
@@ -65,9 +67,14 @@ export default function RegistroScreen() {
       return;
     }
 
-    router.replace({ pathname: "/login", params: { registrado: "1" } });
+    router.replace({
+      pathname: "/login",
+      params: {
+        registrado: "1",
+        tipo: esPaseador ? "paseador" : "propietario",
+      },
+    });
   };
-
   return (
     <ScrollView
       contentContainerStyle={styles.contenedor}

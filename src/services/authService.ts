@@ -1,9 +1,17 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { supabase } from "../lib/supabase";
 
 export type TipoUsuario = "propietario" | "paseador";
 
 export type User = {
   id: string;
+  nombre: string;
+  correo: string;
+  tipo: TipoUsuario;
+  telefono?: string;
+  zona?: string;
+};
+
+export type RegistroData = {
   nombre: string;
   correo: string;
   contrasena: string;
@@ -12,50 +20,81 @@ export type User = {
   zona?: string;
 };
 
-const USERS_KEY = "users";
-const SESSION_KEY = "session";
+type Resultado = { ok: boolean; error?: string };
 
-async function getUsers(): Promise<User[]> {
-  const raw = await AsyncStorage.getItem(USERS_KEY);
-  return raw ? JSON.parse(raw) : [];
+function aUsuario(row: any): User {
+  return {
+    id: row.id,
+    nombre: row.nombre,
+    correo: row.correo,
+    tipo: row.tipo,
+    telefono: row.telefono ?? undefined,
+    zona: row.zona ?? undefined,
+  };
 }
 
-export async function registerUser(data: Omit<User, "id">) {
-  const users = await getUsers();
-  const correo = data.correo.trim().toLowerCase();
+function traducir(msg: string): string {
+  const m = msg.toLowerCase();
+  if (m.includes("already registered") || m.includes("already been registered"))
+    return "Ya existe una cuenta con ese correo.";
+  if (m.includes("invalid login")) return "Correo o contraseña incorrectos.";
+  if (m.includes("not confirmed")) return "Debes confirmar tu correo antes de iniciar sesión.";
+  if (m.includes("password")) return "La contraseña no es válida (mínimo 6 caracteres).";
+  if (m.includes("rate limit")) return "Demasiados intentos. Espera un momento e inténtalo de nuevo.";
+  if (m.includes("network") || m.includes("fetch")) return "Sin conexión. Revisa tu internet.";
+  return msg;
+}
 
-  if (users.some((u) => u.correo === correo)) {
-    return { ok: false, error: "Ya existe una cuenta con ese correo." };
-  }
+export async function registerUser(data: RegistroData): Promise<Resultado> {
+  const { data: res, error } = await supabase.auth.signUp({
+    email: data.correo.trim().toLowerCase(),
+    password: data.contrasena,
+    options: {
+      data: {
+        nombre: data.nombre,
+        tipo: data.tipo,
+        telefono: data.telefono ?? null,
+        zona: data.zona ?? null,
+      },
+    },
+  });
 
-  users.push({ ...data, correo, id: Date.now().toString() });
-  await AsyncStorage.setItem(USERS_KEY, JSON.stringify(users));
+  if (error) return { ok: false, error: traducir(error.message) };
+
+  // Para que el flujo sea "registrarse y luego iniciar sesión"
+  if (res.session) await supabase.auth.signOut();
   return { ok: true };
 }
 
-export async function loginUser(correo: string, contrasena: string) {
-  const users = await getUsers();
-  const user = users.find(
-    (u) =>
-      u.correo === correo.trim().toLowerCase() && u.contrasena === contrasena,
-  );
+export async function loginUser(
+  correo: string,
+  contrasena: string
+): Promise<Resultado & { user?: User }> {
+  const { error } = await supabase.auth.signInWithPassword({
+    email: correo.trim().toLowerCase(),
+    password: contrasena,
+  });
 
-  if (!user) {
-    return { ok: false, error: "Correo o contraseña incorrectos." };
-  }
+  if (error) return { ok: false, error: traducir(error.message) };
 
-  await AsyncStorage.setItem(SESSION_KEY, user.id);
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "No se encontró tu perfil. Vuelve a registrarte." };
   return { ok: true, user };
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-  const id = await AsyncStorage.getItem(SESSION_KEY);
-  if (!id) return null;
-  const users = await getUsers();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) return null;
+  return getUserById(session.user.id);
+}
 
-  return users.find((u) => u.id === id) ?? null;
+export async function getUserById(id: string): Promise<User | null> {
+  const { data } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
+  return data ? aUsuario(data) : null;
 }
 
 export async function logout() {
-  await AsyncStorage.removeItem(SESSION_KEY);
+  await supabase.auth.signOut();
 }

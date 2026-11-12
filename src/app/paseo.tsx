@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import MapaPaseo from "../components/MapaPaseo";
 import { Colores } from "../constants/colores";
-import { getCurrentUser } from "../services/authService";
+import { getCurrentUser, getUserById } from "../services/authService";
 import { getPets } from "../services/petService";
 import {
   Coord,
@@ -25,7 +25,10 @@ import {
 
 export default function PaseoScreen() {
   const router = useRouter();
-  const { petId } = useLocalSearchParams<{ petId?: string }>();
+  const { petId, ownerId } = useLocalSearchParams<{
+    petId?: string;
+    ownerId?: string;
+  }>();
 
   const [petName, setPetName] = useState("");
   const [ruta, setRuta] = useState<Coord[]>([]);
@@ -34,8 +37,10 @@ export default function PaseoScreen() {
   const [estado, setEstado] = useState<"cargando" | "activo" | "error">("cargando");
   const [error, setError] = useState("");
   const [guardando, setGuardando] = useState(false);
+  const [errorGuardar, setErrorGuardar] = useState("");
 
   const userIdRef = useRef("");
+  const ownerNameRef = useRef("");
   const inicioRef = useRef(Date.now());
   const rutaRef = useRef<Coord[]>([]);
   const distRef = useRef(0);
@@ -73,14 +78,18 @@ export default function PaseoScreen() {
       }
       userIdRef.current = user.id;
 
-      const pets = await getPets(user.id);
+      // Datos de la mascota y de su dueño
+      const pets = await getPets(ownerId ?? "");
       setPetName(pets.find((p) => p.id === petId)?.name ?? "tu mascota");
+      ownerNameRef.current = (await getUserById(ownerId ?? ""))?.nombre ?? "";
 
       try {
         // 1. Pedir permiso de ubicación
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
-          fallar("Necesitamos el permiso de ubicación para registrar el paseo. Actívalo en los ajustes del celular.");
+          fallar(
+            "Necesitamos el permiso de ubicación para registrar el paseo. Actívalo en los ajustes del celular."
+          );
           return;
         }
 
@@ -127,7 +136,9 @@ export default function PaseoScreen() {
 
         setEstado("activo");
       } catch {
-        fallar("No se pudo obtener la ubicación. Revisa que el GPS esté activado e inténtalo de nuevo.");
+        fallar(
+          "No se pudo obtener la ubicación. Revisa que el GPS esté activado e inténtalo de nuevo."
+        );
       }
     })();
 
@@ -146,14 +157,16 @@ export default function PaseoScreen() {
   const finalizar = async () => {
     if (guardando) return;
     setGuardando(true);
+    setErrorGuardar("");
     detener();
 
     const fin = Date.now();
-    const walk: Walk = {
-      id: fin.toString(),
+    const walk: Omit<Walk, "id"> = {
       userId: userIdRef.current,
       petId: petId ?? "",
       petName,
+      ownerId: ownerId ?? "",
+      ownerName: ownerNameRef.current,
       inicio: inicioRef.current,
       fin,
       duracionSeg: Math.floor((fin - inicioRef.current) / 1000),
@@ -161,8 +174,14 @@ export default function PaseoScreen() {
       ruta: rutaRef.current,
     };
 
-    await saveWalk(userIdRef.current, walk);
-    router.replace({ pathname: "/paseo-resumen", params: { id: walk.id } });
+    const r = await saveWalk(userIdRef.current, walk);
+    if (!r.ok || !r.id) {
+      // El recorrido sigue en memoria: al tocar de nuevo se reintenta
+      setGuardando(false);
+      setErrorGuardar(r.error ?? "No se pudo guardar el paseo. Inténtalo de nuevo.");
+      return;
+    }
+    router.replace({ pathname: "/paseo-resumen", params: { id: r.id } });
   };
 
   if (estado === "error") {
@@ -204,6 +223,8 @@ export default function PaseoScreen() {
           </View>
         </View>
 
+        {errorGuardar ? <Text style={styles.errorGuardar}>{errorGuardar}</Text> : null}
+
         <TouchableOpacity
           style={[styles.boton, styles.botonFinalizar]}
           activeOpacity={0.8}
@@ -232,6 +253,7 @@ const styles = StyleSheet.create({
   emoji: { fontSize: 48, marginBottom: 12 },
   cargando: { marginTop: 14, color: Colores.textoSuave, fontSize: 16 },
   error: { color: Colores.peligro, textAlign: "center", fontSize: 16, marginBottom: 24 },
+  errorGuardar: { color: Colores.peligro, textAlign: "center", fontSize: 14 },
   titulo: { fontSize: 17, fontWeight: "bold", color: Colores.texto },
   fila: { flexDirection: "row", gap: 12 },
   dato: {

@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,10 +14,21 @@ import { loginUser } from "../services/authService";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { registrado } = useLocalSearchParams<{ registrado?: string }>();
+  const { registrado, tipo } = useLocalSearchParams<{
+    registrado?: string;
+    tipo?: string;
+  }>();
+  const esPaseador = tipo === "paseador";
+
   const [correo, setCorreo] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [error, setError] = useState("");
+
+  // Regresar a la pantalla anterior; si no hay, ir al inicio
+  const volver = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/");
+  };
 
   const iniciarSesion = async () => {
     setError("");
@@ -37,65 +49,100 @@ export default function LoginScreen() {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.contenedor}
-      keyboardShouldPersistTaps="handled"
-    >
-      <View style={styles.contenido}>
-        <Text style={styles.icono}>🐾</Text>
-        <Text style={styles.titulo}>Bienvenido a PetWalk</Text>
-        <Text style={styles.subtitulo}>Inicia sesión para continuar.</Text>
+    <View style={styles.pantalla}>
+      <TouchableOpacity
+        style={styles.atras}
+        onPress={volver}
+        activeOpacity={0.6}
+      >
+        <Text style={styles.flecha}>‹</Text>
+      </TouchableOpacity>
 
-        {registrado ? (
-          <Text style={styles.exito}>
-            ¡Cuenta creada! Ahora inicia sesión.
-          </Text>
-        ) : null}
+      <ScrollView
+        contentContainerStyle={styles.contenedor}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.contenido}>
+          <Text style={styles.icono}>{esPaseador ? "🦮" : "🐶"}</Text>
+          <Text style={styles.titulo}>Bienvenido a PetWalk</Text>
+          <Text style={styles.subtitulo}>Inicia sesión para continuar.</Text>
 
-        <Text style={styles.etiqueta}>Correo electrónico</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="ejemplo@correo.com"
-          value={correo}
-          onChangeText={setCorreo}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
+          <View style={styles.filaChip}>
+            <View style={[styles.chip, esPaseador && styles.chipPaseador]}>
+              <Text
+                style={[
+                  styles.chipTexto,
+                  esPaseador && styles.chipTextoPaseador,
+                ]}
+              >
+                {esPaseador
+                  ? "🦮 Cuenta de paseador"
+                  : "🐶 Cuenta de propietario"}
+              </Text>
+            </View>
+          </View>
 
-        <Text style={styles.etiqueta}>Contraseña</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Tu contraseña"
-          value={contrasena}
-          onChangeText={setContrasena}
-          secureTextEntry
-        />
+          {registrado ? (
+            <Text style={styles.exito}>
+              ¡Cuenta creada! Ahora inicia sesión.
+            </Text>
+          ) : null}
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+          <Text style={styles.etiqueta}>Correo electrónico</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="ejemplo@correo.com"
+            value={correo}
+            onChangeText={setCorreo}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
 
-        <TouchableOpacity
-          style={styles.boton}
-          onPress={iniciarSesion}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.textoBoton}>Iniciar sesión</Text>
-        </TouchableOpacity>
+          <Text style={styles.etiqueta}>Contraseña</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Tu contraseña"
+            value={contrasena}
+            onChangeText={setContrasena}
+            secureTextEntry
+          />
 
-        <TouchableOpacity onPress={() => router.replace("/")}>
-          <Text style={styles.enlace}>¿No tienes cuenta? Regístrate</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+
+          <TouchableOpacity
+            style={styles.boton}
+            onPress={iniciarSesion}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.textoBoton}>Iniciar sesión</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={volver}>
+            <Text style={styles.enlace}>¿No tienes cuenta? Regístrate</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  pantalla: { flex: 1, backgroundColor: Colores.fondo },
+  atras: {
+    position: "absolute",
+    top: Platform.OS === "web" ? 16 : 48,
+    left: 14,
+    zIndex: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+  },
+  flecha: { fontSize: 38, color: Colores.primario, fontWeight: "bold" },
   contenedor: {
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 25,
-    backgroundColor: Colores.fondo,
+    paddingTop: 70,
   },
   contenido: { width: "100%", maxWidth: 420 },
   icono: { fontSize: 56, textAlign: "center", marginBottom: 8 },
@@ -104,14 +151,24 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: Colores.primario,
     textAlign: "center",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   subtitulo: {
     fontSize: 16,
     color: Colores.textoSuave,
     textAlign: "center",
-    marginBottom: 28,
+    marginBottom: 12,
   },
+  filaChip: { alignItems: "center", marginBottom: 18 },
+  chip: {
+    backgroundColor: Colores.fondoClaro,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+  },
+  chipPaseador: { backgroundColor: Colores.ambar },
+  chipTexto: { color: Colores.primario, fontWeight: "600", fontSize: 14 },
+  chipTextoPaseador: { color: Colores.ambarTexto },
   exito: {
     backgroundColor: Colores.fondoClaro,
     color: Colores.primario,
@@ -120,6 +177,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 12,
     marginBottom: 8,
+    overflow: "hidden",
   },
   etiqueta: {
     fontSize: 15,

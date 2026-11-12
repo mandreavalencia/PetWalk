@@ -10,4 +10,7 @@ export const Colores = {
   peligro: "#C0392B",
   gris: "#8A9A92",
   blanco: "#FFFFFF",
+  ambar: "#FFE9C7",
+  ambarTexto: "#8A5A00",
 };
+                                                                                                                                                                                                                          

@@ -59,13 +59,8 @@ export default function InicioScreen() {
         {esPaseador ? (
           <>
             <Opcion
-              titulo="🐶 Mis mascotas"
-              ayuda="Registra las mascotas que vas a pasear"
-              onPress={() => router.push("/mascotas")}
-            />
-            <Opcion
               titulo="🦮 Iniciar paseo"
-              ayuda="Registra el recorrido con GPS"
+              ayuda="Elige la mascota y registra el recorrido"
               onPress={() => router.push("/iniciar-paseo")}
             />
             <Opcion
@@ -74,10 +69,17 @@ export default function InicioScreen() {
             />
           </>
         ) : (
-          <Opcion
-            titulo="📍 Paseos de mis mascotas"
-            ayuda="Consulta los recorridos"
-          />
+          <>
+            <Opcion
+              titulo="🐶 Mis mascotas"
+              ayuda="Registra y administra tus mascotas"
+              onPress={() => router.push("/mascotas")}
+            />
+            <Opcion
+              titulo="📍 Paseos de mis mascotas"
+              ayuda="Consulta los recorridos"
+            />
+          </>
         )}
 
         <TouchableOpacity

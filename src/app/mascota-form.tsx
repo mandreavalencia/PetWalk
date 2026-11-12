@@ -80,7 +80,7 @@ export default function MascotaFormScreen() {
       return;
     }
 
-    await savePet(user.id, {
+        const r = await savePet(user.id, {
       id,
       name: name.trim(),
       species: species.trim(),
@@ -89,6 +89,10 @@ export default function MascotaFormScreen() {
       photo,
       notes: notes.trim(),
     });
+        if (!r.ok) {
+      setError(r.error ?? "No se pudo guardar la mascota.");
+      return;
+    }
     router.back();
   };
 
