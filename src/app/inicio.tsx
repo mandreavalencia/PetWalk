@@ -1,6 +1,12 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Colores } from "../constants/colores";
 import { getCurrentUser, logout, User } from "../services/authService";
 
@@ -48,7 +54,7 @@ export default function InicioScreen() {
   const esPaseador = user.tipo === "paseador";
 
   return (
-    <View style={styles.contenedor}>
+    <ScrollView contentContainerStyle={styles.contenedor}>
       <View style={styles.contenido}>
         <Text style={styles.icono}>{esPaseador ? "🦮" : "🐶"}</Text>
         <Text style={styles.titulo}>¡Hola, {user.nombre}!</Text>
@@ -84,6 +90,12 @@ export default function InicioScreen() {
           </>
         )}
 
+        <Opcion
+          titulo="👤 Mi perfil"
+          ayuda="Consulta y edita tus datos"
+          onPress={() => router.push("/perfil" as any)}
+        />
+
         <TouchableOpacity
           style={styles.botonSalir}
           activeOpacity={0.8}
@@ -92,13 +104,13 @@ export default function InicioScreen() {
           <Text style={styles.textoSalir}>Cerrar sesión</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   contenedor: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: Colores.fondo,
     alignItems: "center",
     justifyContent: "center",

@@ -98,3 +98,23 @@ export async function getUserById(id: string): Promise<User | null> {
 export async function logout() {
   await supabase.auth.signOut();
 }
+
+export async function updateProfile(
+  id: string,
+  datos: { nombre: string; telefono?: string; zona?: string }
+): Promise<{ ok: boolean; error?: string; user?: User }> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({
+      nombre: datos.nombre,
+      telefono: datos.telefono || null,
+      zona: datos.zona || null,
+    })
+    .eq("id", id)
+    .select("*")
+    .maybeSingle();
+
+  if (error) return { ok: false, error: "No se pudo guardar: " + error.message };
+  if (!data) return { ok: false, error: "No se pudo actualizar tu perfil." };
+  return { ok: true, user: aUsuario(data) };
+}
