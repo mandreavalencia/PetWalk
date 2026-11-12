@@ -66,6 +66,7 @@ export default function InicioScreen() {
             <Opcion
               titulo="📍 Historial de paseos"
               ayuda="Consulta tus recorridos"
+              onPress={() => router.push("/historial")}
             />
           </>
         ) : (
@@ -78,6 +79,7 @@ export default function InicioScreen() {
             <Opcion
               titulo="📍 Paseos de mis mascotas"
               ayuda="Consulta los recorridos"
+              onPress={() => router.push("/historial")}
             />
           </>
         )}

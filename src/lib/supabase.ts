@@ -23,4 +23,3 @@ export const supabase = createClient(
     },
   },
 );
-console.log("URL en uso:", JSON.stringify(url));

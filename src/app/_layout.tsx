@@ -12,6 +12,8 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <AnimatedSplashOverlay />
       <Stack>
+        <Stack.Screen name="historial" options={{ title: 'Historial de paseos' }} />
+<Stack.Screen name="paseo-detalle" options={{ title: 'Detalle del paseo' }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="registro" options={{ title: "Registro" }} />

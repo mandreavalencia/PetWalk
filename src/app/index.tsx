@@ -7,14 +7,12 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        {/* Encabezado */}
         <Text style={styles.emoji}>🐾</Text>
         <Text style={styles.title}>PetWalk</Text>
         <Text style={styles.subtitle}>
           Paseos más seguros y organizados para tus mascotas
         </Text>
 
-        {/* Bloque 1: crear cuenta */}
         <Text style={styles.sectionTitle}>Crear una cuenta como</Text>
 
         <TouchableOpacity
@@ -43,24 +41,6 @@ export default function HomeScreen() {
         >
           <Text style={styles.buttonText}>🦮 Paseador</Text>
           <Text style={styles.buttonHint}>Realiza y registra paseos</Text>
-        </TouchableOpacity>
-
-        {/* Separador */}
-        <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>o</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        {/* Bloque 2: iniciar sesión */}
-        <TouchableOpacity
-          style={styles.loginButton}
-          activeOpacity={0.8}
-          onPress={() => router.push("/login")}
-        >
-          <Text style={styles.loginButtonText}>
-            Ya tengo cuenta · Iniciar sesión
-          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -121,32 +101,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 13,
     marginTop: 3,
-  },
-  dividerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 22,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#B9D9D2",
-  },
-  dividerText: {
-    marginHorizontal: 12,
-    color: "#688176",
-    fontSize: 14,
-  },
-  loginButton: {
-    borderWidth: 2,
-    borderColor: "#2E7D6E",
-    paddingVertical: 14,
-    borderRadius: 15,
-  },
-  loginButtonText: {
-    color: "#2E7D6E",
-    textAlign: "center",
-    fontSize: 16,
-    fontWeight: "bold",
   },
 });

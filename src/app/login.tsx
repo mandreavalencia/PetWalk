@@ -19,6 +19,7 @@ export default function LoginScreen() {
     tipo?: string;
   }>();
   const esPaseador = tipo === "paseador";
+  const hayTipo = tipo === "paseador" || tipo === "propietario";
 
   const [correo, setCorreo] = useState("");
   const [contrasena, setContrasena] = useState("");
@@ -63,24 +64,32 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.contenido}>
-          <Text style={styles.icono}>{esPaseador ? "🦮" : "🐶"}</Text>
+          <Text style={styles.icono}>
+            {esPaseador ? "🦮" : hayTipo ? "🐶" : "🐾"}
+          </Text>
           <Text style={styles.titulo}>Bienvenido a PetWalk</Text>
-          <Text style={styles.subtitulo}>Inicia sesión para continuar.</Text>
+          <Text style={styles.subtitulo}>
+            {hayTipo
+              ? "Inicia sesión para continuar."
+              : "Entra con tu cuenta de propietario o paseador."}
+          </Text>
 
-          <View style={styles.filaChip}>
-            <View style={[styles.chip, esPaseador && styles.chipPaseador]}>
-              <Text
-                style={[
-                  styles.chipTexto,
-                  esPaseador && styles.chipTextoPaseador,
-                ]}
-              >
-                {esPaseador
-                  ? "🦮 Cuenta de paseador"
-                  : "🐶 Cuenta de propietario"}
-              </Text>
+          {hayTipo ? (
+            <View style={styles.filaChip}>
+              <View style={[styles.chip, esPaseador && styles.chipPaseador]}>
+                <Text
+                  style={[
+                    styles.chipTexto,
+                    esPaseador && styles.chipTextoPaseador,
+                  ]}
+                >
+                  {esPaseador
+                    ? "🦮 Cuenta de paseador"
+                    : "🐶 Cuenta de propietario"}
+                </Text>
+              </View>
             </View>
-          </View>
+          ) : null}
 
           {registrado ? (
             <Text style={styles.exito}>
@@ -157,7 +166,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colores.textoSuave,
     textAlign: "center",
-    marginBottom: 12,
+    marginBottom: 16,
   },
   filaChip: { alignItems: "center", marginBottom: 18 },
   chip: {

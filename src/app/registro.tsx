@@ -146,7 +146,14 @@ export default function RegistroScreen() {
           <Text style={styles.textoBoton}>Crear mi cuenta</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.replace("/login")}>
+        <TouchableOpacity
+  onPress={() =>
+    router.replace({
+      pathname: "/login",
+      params: { tipo: esPaseador ? "paseador" : "propietario" },
+    })
+  }
+>
           <Text style={styles.enlace}>¿Ya tienes cuenta? Inicia sesión</Text>
         </TouchableOpacity>
       </View>
